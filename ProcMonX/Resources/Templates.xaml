@@ -6,4 +6,5 @@
     <DataTemplate DataType="{x:Type vm:EventsTabViewModel}" >
         <view:EventsTabView />
     </DataTemplate>
+
 </ResourceDictionary>

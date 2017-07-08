@@ -27,7 +27,7 @@
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="_Copy" Command="Copy" Icon="{z:Image /icons/copy.ico, Width=20, Height=20}" />
+                <MenuItem Header="_Copy" Command="Copy" Icon="{z:Image /icons/normal/copy.ico, Width=20, Height=20}" />
             </MenuItem>
             <MenuItem Header="_Monitor">
                 <MenuItem Header="_Go" Icon="{z:Image /icons/normal/play.ico, Width=20, Height=20}" Command="{Binding GoCommand}" />

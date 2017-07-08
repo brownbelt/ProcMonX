@@ -81,6 +81,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\DataGridExtensions.cs" />
     <Compile Include="Converters\ToolbarIconConverter.cs" />
     <Compile Include="Extensions\IconProperties.cs" />
     <Compile Include="Models\AppOptions.cs" />
@@ -164,7 +165,9 @@
   <ItemGroup>
     <Resource Include="Icons\app.ico" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Icons\Disabled\Copy.ico" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\Events\ProcessStart.ico" />
     <Resource Include="Icons\Events\ProcessStop.ico" />
@@ -209,6 +212,19 @@
     <Resource Include="Icons\Disabled\Pause.ico" />
     <Resource Include="Icons\Disabled\Play.ico" />
     <Resource Include="Icons\Disabled\Stop.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Normal\Copy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Hot\Copy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Events\ImageUnload.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Events\ImageLoad.ico" />
+    <Resource Include="Icons\Tabs\Image.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets" Condition="Exists('..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" />

@@ -24,5 +24,13 @@ namespace ProcMonX.ViewModels {
 
 		public IEnumerable<TraceEventDataViewModel> Events { get; }
 
+		public bool IsGeneric => !(IsProcessesOnly || IsThreadsOnly || IsModulesOnly || IsRegistryOnly || IsImagesOnly);
+
+		public bool IsProcessesOnly { get; set; }
+		public bool IsThreadsOnly { get; set; }
+		public bool IsModulesOnly { get; set; }
+		public bool IsRegistryOnly { get; set; }
+		public bool IsImagesOnly { get; set; }
 	}
+
 }

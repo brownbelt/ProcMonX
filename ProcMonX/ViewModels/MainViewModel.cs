@@ -13,18 +13,23 @@ using Microsoft.Diagnostics.Tracing.Parsers.Kernel;
 using System.Diagnostics;
 using System.Threading;
 using System.Collections;
+using Microsoft.Diagnostics.Tracing;
 
 namespace ProcMonX.ViewModels {
 	class MainViewModel : BindableBase {
 		TraceManager _traceManager = new TraceManager();
 		ObservableCollection<TabViewModelBase> _tabs = new ObservableCollection<TabViewModelBase>();
 		ObservableCollection<TraceEventDataViewModel> _events = new ObservableCollection<TraceEventDataViewModel>();
+		ObservableCollection<EventType> _eventTypes = new ObservableCollection<EventType>();
+
 		List<TraceEventDataViewModel> _tempEvents = new List<TraceEventDataViewModel>(128);
 		DispatcherTimer _updateTimer;
 
 		public AppOptions Options { get; } = new AppOptions();
 
 		public IList<TabViewModelBase> Tabs => _tabs;
+
+		public IList<EventType> EventTypes => _eventTypes;
 
 		public IList<TraceEventDataViewModel> Events => _events;
 
@@ -41,11 +46,22 @@ namespace ProcMonX.ViewModels {
 			Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 			Thread.CurrentThread.Priority = ThreadPriority.Highest;
 
+			AddEventTypes(
+				EventType.ProcessStart, EventType.ProcessStop, 
+				EventType.ImageLoad, EventType.ImageUnload, 
+				EventType.RegistryQueryValue, EventType.RegistryCreateKey, EventType.RegistrySetValue, EventType.RegistryOpenKey,
+				EventType.ThreadStart, EventType.ThreadStop);
+
 			HookupEvents();
 			Init();
 
 			_updateTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.ApplicationIdle, (_, __) => Update(), Dispatcher);
 			_updateTimer.Start();
+		}
+
+		public void AddEventTypes(params EventType[] types) {
+			foreach (var type in types)
+				_eventTypes.Add(type);
 		}
 
 		private void Init() {
@@ -57,25 +73,31 @@ namespace ProcMonX.ViewModels {
 			AddTab(new EventsTabViewModel(_events, evt => evt.Data is ProcessTraceData) {
 				Header = "Processes",
 				Icon = "/icons/tabs/processes.ico",
+				IsProcessesOnly = true
+			});
+
+			AddTab(new EventsTabViewModel(_events, evt => evt.Data is ImageLoadTraceData) {
+				Header = "Images",
+				Icon = "/icons/tabs/image.ico",
+				IsImagesOnly = true
 			});
 
 			AddTab(new EventsTabViewModel(_events, evt => evt.Data is ThreadTraceData) {
 				Header = "Threads",
 				Icon = "/icons/tabs/threads.ico",
+				IsThreadsOnly = true
 			});
-		}
-
-		public IEnumerable ToolbarItems {
-			get {
-				yield return new { ToolTip = "Start Monitoring", Icon = "start" };
-				yield return new { ToolTip = "Stop Monitoring", Icon = "stop" };
-			}
+			AddTab(new EventsTabViewModel(_events, evt => evt.Data is RegistryTraceData) {
+				Header = "Registry",
+				Icon = "/icons/tabs/registry.ico",
+				IsRegistryOnly = true
+			});
 		}
 
 		private void HookupEvents() {
 			_traceManager.ProcessTrace += (evt, type) => {
 				lock(_tempEvents)
-					_tempEvents.Add(new TraceEventDataViewModel<ProcessTraceData>(evt, type));
+					_tempEvents.Add(new TraceEventDataViewModel<ProcessTraceData>(evt, type, GetMoreInfo(evt)));
 			};
 
 			_traceManager.ThreadTrace += (evt, type) => {
@@ -87,6 +109,20 @@ namespace ProcMonX.ViewModels {
 				lock (_tempEvents)
 					_tempEvents.Add(new TraceEventDataViewModel<RegistryTraceData>(evt, type));
 			};
+
+			_traceManager.ImageLoadTrace += (evt, type) => {
+				lock (_tempEvents)
+					_tempEvents.Add(new TraceEventDataViewModel<ImageLoadTraceData>(evt, type));
+			};
+
+		}
+
+		private string GetMoreInfo(TraceEvent evt) {
+			switch (evt) {
+				case ProcessTraceData p:
+					return $"Parent PID: {p.ParentID}; Command Line={p.CommandLine}; Process Flags: {p.Flags}; Bitness: {p.PointerSize * 4}";
+			}
+			return string.Empty;
 		}
 
 		void Update() {
@@ -140,7 +176,7 @@ namespace ProcMonX.ViewModels {
 		}
 
 		private void ResumeMonitoring() {
-			_traceManager.Start(TraceElements.Process | TraceElements.Thread | TraceElements.Registry, false);// _events.Count == 0);
+			_traceManager.Start(EventTypes, false);
 			IsMonitoring = true;
 		}
 	}

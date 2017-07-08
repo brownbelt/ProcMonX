@@ -23,6 +23,7 @@ namespace ProcMonX.Tracing {
 		public event Action<ProcessTraceData, EventType> ProcessTrace;
 		public event Action<ThreadTraceData, EventType> ThreadTrace;
 		public event Action<RegistryTraceData, EventType> RegistryTrace;
+		public event Action<ImageLoadTraceData, EventType> ImageLoadTrace;
 
 		public TraceManager() {
 		}
@@ -31,17 +32,22 @@ namespace ProcMonX.Tracing {
 			_session.Dispose();
 		}
 
-		public void Start(TraceElements elements, bool includeInit) {
+		public void Start(IEnumerable<EventType> types, bool includeInit) {
 			_includeInit = includeInit;
 			_session = new TraceEventSession(KernelTraceEventParser.KernelSessionName) {
 				BufferSizeMB = 128,
 				CpuSampleIntervalMSec = 10
 			};
-			_session.EnableKernelProvider((KernelTraceEventParser.Keywords)elements);
+
+			var keywords = KernelTraceEventParser.Keywords.None;
+			foreach (var type in types)
+				keywords |= EventInfo.AllEventsByType[type].Keyword;
+
+			_session.EnableKernelProvider(keywords);
 
 			_processingThread = new Thread(() => {
 				_parser = new KernelTraceEventParser(_session.Source);
-				SetupCallbacks(elements);
+				SetupCallbacks(types);
 				_session.Source.Process();
 			});
 			_processingThread.Priority = ThreadPriority.Lowest;
@@ -55,32 +61,56 @@ namespace ProcMonX.Tracing {
 			_session.Stop();
 		}
 
-		private void SetupCallbacks(TraceElements elements) {
-			if (elements.HasFlag(TraceElements.Process)) {
-				_parser.ProcessStart += OnProcessStart;
-				if (_includeInit) {
-					_parser.ProcessDCStart += OnProcessDCStart;
-					_parser.ProcessDCStop += obj => ProcessTrace?.Invoke((ProcessTraceData)obj.Clone(), EventType.ProcessExited);
+		private void SetupCallbacks(IEnumerable<EventType> types) {
+			foreach(var type in types) {
+				switch (type) {
+					case EventType.ProcessStart:
+						_parser.ProcessStart += obj => ProcessTrace?.Invoke((ProcessTraceData)obj.Clone(), EventType.ProcessStart);
+						break;
+
+					case EventType.ProcessStop:
+						_parser.ProcessStop += obj => ProcessTrace?.Invoke((ProcessTraceData)obj.Clone(), EventType.ProcessStop);
+						break;
+
+					case EventType.ThreadStart:
+						_parser.ThreadStart += obj => ThreadTrace?.Invoke((ThreadTraceData)obj.Clone(), EventType.ThreadStart);
+						break;
+
+					case EventType.ThreadStop:
+						_parser.ThreadStop += obj => ThreadTrace?.Invoke((ThreadTraceData)obj.Clone(), EventType.ThreadStop);
+						break;
+
+					case EventType.RegistryCreateKey:
+						_parser.RegistryCreate += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryCreateKey);
+						break;
+
+					case EventType.RegistryOpenKey:
+						_parser.RegistryOpen += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryOpenKey);
+						break;
+
+					case EventType.RegistryQueryValue:
+						_parser.RegistryQueryValue += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryOpenKey);
+						break;
+
+					case EventType.RegistrySetValue:
+						_parser.RegistrySetValue += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryOpenKey);
+						break;
+
+					case EventType.ImageLoad:
+						_parser.ImageLoad += obj => ImageLoadTrace?.Invoke((ImageLoadTraceData)obj.Clone(), EventType.ImageLoad);
+						break;
+
+					case EventType.ImageUnload:
+						_parser.ImageUnload += obj => ImageLoadTrace?.Invoke((ImageLoadTraceData)obj.Clone(), EventType.ImageUnload);
+						break;
 				}
-				_parser.ProcessStop += OnProcessStop;
-			}
-			if (elements.HasFlag(TraceElements.Thread)) {
-				_parser.ThreadStart += OnThreadStart;
-				_parser.ThreadStop += OnThreadStop;
-			}
-			if (elements.HasFlag(TraceElements.Registry)) {
-				_parser.RegistryCreate += OnRegistryCreate;
-				_parser.RegistryOpen += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryOpenKey);
 			}
 		}
 
-		private void OnRegistryCreate(RegistryTraceData obj) {
-			RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryCreateKey);
-		}
 
 		private void OnProcessDCStart(ProcessTraceData obj) {
 			var data = (ProcessTraceData)obj.Clone();
-			ProcessTrace?.Invoke(data, EventType.ProcessExists);
+			ProcessTrace?.Invoke(data, EventType.ProcessDCStart);
 		}
 
 		private void OnThreadStop(ThreadTraceData obj) {

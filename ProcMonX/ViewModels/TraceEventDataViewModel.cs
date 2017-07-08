@@ -22,20 +22,23 @@ namespace ProcMonX.ViewModels {
 
 		public int? ThreadId => Data.ThreadID < 0 ? (int?)null : Data.ThreadID;
 
-		public TraceEventDataViewModel(TraceEvent evt, EventType type) {
+		public string MoreInfo { get; }
+
+		public TraceEventDataViewModel(TraceEvent evt, EventType type, string moreInfo) {
 			Data = evt;
 			Type = type;
-			Info = EventInfo.AllEvents[type];
+			Info = EventInfo.AllEventsByType[type];
 			TypeAsString = Info.AsString ?? type.ToString();
 			Index = Interlocked.Increment(ref _globalIndex);
 			Icon = $"/icons/events/{type.ToString()}.ico";
+			MoreInfo = moreInfo;
 		}
 	}
 
-	class TraceEventDataViewModel<T> : TraceEventDataViewModel where T : TraceEvent {
+	sealed class TraceEventDataViewModel<T> : TraceEventDataViewModel where T : TraceEvent {
 		public new T Data { get; }
 
-		public TraceEventDataViewModel(T evt, EventType type) : base(evt, type) {
+		public TraceEventDataViewModel(T evt, EventType type, string moreInfo = null) : base(evt, type, moreInfo) {
 			Data = evt;
 		}
 	}

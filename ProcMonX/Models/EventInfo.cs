@@ -6,47 +6,89 @@ using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Parsers;
 
 namespace ProcMonX.Models {
-	[Flags]
-	enum TraceElements {
-		None = 0,
-		Process = KernelTraceEventParser.Keywords.Process,
-		Thread = KernelTraceEventParser.Keywords.Thread,
-		File = KernelTraceEventParser.Keywords.FileIO,
-		ImageLoad = KernelTraceEventParser.Keywords.ImageLoad,
-		Registry = KernelTraceEventParser.Keywords.Registry,
-		VirtualAlloc = KernelTraceEventParser.Keywords.VirtualAlloc,
-		Driver = KernelTraceEventParser.Keywords.Driver,
-		Network = KernelTraceEventParser.Keywords.NetworkTCPIP,
-	}
 
 	enum EventType {
 		None,
-		ProcessStart, ProcessStop, ProcessExists, ProcessExited,
-		ThreadStart, ThreadStop, ThreadExists,
-		VirtualAlloc, VirtualFree,
-		RegistryOpenKey, RegistryQueryValue, RegistryWriteValue, RegistryReadValue, RegistryCreateKey,
-		AlpcSendMessage, AlpcReceiveMessage,
-		ImageLoad, ImageUnload,
+		ProcessStart = 100, ProcessStop, ProcessDCStart, ProcessDCStop,
+		ThreadStart = 200, ThreadStop, ThreadDCStart, ThreadDCStop,
+		VirtualAlloc = 300, VirtualFree,
+		RegistryOpenKey = 400, RegistryQueryValue, RegistrySetValue, RegistryCreateKey, RegistryCloseKey, RegistryEnumerateKey, RegistryFlush,
+		AlpcSendMessage = 500, AlpcReceiveMessage,
+		ImageLoad = 600, ImageUnload,
 	}
 
 	class EventInfo {
-		public TraceElements TraceElement { get; private set; }
 		public EventType EventType { get; private set; }
 		public string AsString { get; private set; }
+		public KernelTraceEventParser.Keywords Keyword { get; private set; }
 
-		public static readonly IDictionary<EventType, EventInfo> AllEvents =
+		public string Category { get; private set; }
+
+		public static readonly IReadOnlyList<EventInfo> AllEvents =
 			new List<EventInfo> {
-				new EventInfo { EventType = EventType.ProcessStart, TraceElement = TraceElements.Process, AsString = "Process Start" },
-				new EventInfo { EventType = EventType.ProcessExists, TraceElement = TraceElements.Process, AsString = "Process Exists" },
-				new EventInfo { EventType = EventType.ProcessStop, TraceElement = TraceElements.Process, AsString = "Process Stop" },
-				new EventInfo { EventType = EventType.ThreadStart, TraceElement = TraceElements.Thread, AsString = "Thread Start" },
-				new EventInfo { EventType = EventType.ThreadExists, TraceElement = TraceElements.Thread, AsString = "Thread Exists" },
-				new EventInfo { EventType = EventType.ThreadStop, TraceElement = TraceElements.Thread, AsString = "Thread Stop" },
-				new EventInfo { EventType = EventType.RegistryOpenKey, TraceElement = TraceElements.Registry, AsString = "Registry Key Open" },
-				new EventInfo { EventType = EventType.RegistryCreateKey, TraceElement = TraceElements.Registry, AsString = "Registry Key Create" },
-				new EventInfo { EventType = EventType.RegistryQueryValue, TraceElement = TraceElements.Registry, AsString = "Registry Query Value" },
-				new EventInfo { EventType = EventType.ImageLoad, TraceElement = TraceElements.ImageLoad, AsString = "Image Loaded" },
-				new EventInfo { EventType = EventType.ImageUnload, TraceElement = TraceElements.ImageLoad, AsString = "Image Unloaded" },
-			}.ToDictionary(evt => evt.EventType);
+				new EventInfo {
+					EventType = EventType.ProcessStart,
+					AsString = "Process Start",
+					Keyword = KernelTraceEventParser.Keywords.Process,
+					Category = "Process"
+				},
+				new EventInfo {
+					EventType = EventType.ProcessDCStart,
+					AsString = "Process DC Start",
+					Keyword = KernelTraceEventParser.Keywords.Process,
+					Category = "Process"
+				},
+				new EventInfo {
+					EventType = EventType.ProcessStop,
+					AsString = "Process Stop",
+					Keyword = KernelTraceEventParser.Keywords.Process,
+					Category = "Process"
+				},
+				new EventInfo {
+					EventType = EventType.ThreadStart,
+					AsString = "Thread Start",
+					Keyword = KernelTraceEventParser.Keywords.Thread,
+					Category = "Thread"
+				},
+				new EventInfo {
+					EventType = EventType.ThreadDCStart,
+					AsString = "Thread DC Start",
+					Keyword = KernelTraceEventParser.Keywords.Thread,
+					Category = "Thread"
+				},
+				new EventInfo {
+					EventType = EventType.ThreadStop,
+					AsString = "Thread Stop",
+					Keyword = KernelTraceEventParser.Keywords.Thread,
+					Category = "Thread"
+				},
+				new EventInfo {
+					EventType = EventType.RegistryOpenKey,
+					AsString = "Registry Key Open",
+					Keyword = KernelTraceEventParser.Keywords.Registry,
+					Category = "Registry"
+				},
+				new EventInfo {
+					EventType = EventType.RegistryCreateKey, AsString = "Registry Key Create", Keyword = KernelTraceEventParser.Keywords.Registry, Category = "Registry"
+				},
+				new EventInfo {
+					EventType = EventType.RegistryQueryValue, AsString = "Registry Query Value", Keyword = KernelTraceEventParser.Keywords.Registry, Category = "Registry"
+				},
+				new EventInfo {
+					EventType = EventType.RegistrySetValue, AsString = "Registry Set Value", Keyword = KernelTraceEventParser.Keywords.Registry, Category = "Registry"
+				},
+				new EventInfo {
+					EventType = EventType.RegistryEnumerateKey, AsString = "Registry Enumerate Key", Keyword = KernelTraceEventParser.Keywords.Registry, Category = "Registry"
+				},
+				new EventInfo {
+					EventType = EventType.ImageLoad, AsString = "Image Loaded", Keyword = KernelTraceEventParser.Keywords.ImageLoad, Category = "Image Load"
+				},
+				new EventInfo {
+					EventType = EventType.ImageUnload, AsString = "Image Unloaded", Keyword = KernelTraceEventParser.Keywords.ImageLoad, Category = "Image Load"
+				}
+			};
+
+		public static readonly IDictionary<EventType, EventInfo> AllEventsByType = AllEvents.ToDictionary(evt => evt.EventType);
+		public static readonly IEnumerable<IGrouping<string, EventInfo>> AllEventsByCategory = AllEvents.GroupBy(evt => evt.Category);
 	}
 }

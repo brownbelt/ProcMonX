@@ -6,14 +6,18 @@
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:local="clr-namespace:ProcMonX.Views"
+             xmlns:conv="clr-namespace:ProcMonX.Converters"
              xmlns:z="http://zodiacon.wpf/2016"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <Grid.Resources>
+            <z:BindingProxy x:Key="Proxy" Data="{Binding}" />
+            <z:BooleanToVisibilityConverter x:Key="bool2vis" />
         </Grid.Resources>
         <DataGrid ItemsSource="{Binding Items, Mode=OneTime}" IsReadOnly="True" AutoGenerateColumns="False" metro:ButtonHelper.PreserveTextCase="True" FrozenColumnCount="2"
-                  ScrollViewer.IsDeferredScrollingEnabled="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                  ScrollViewer.IsDeferredScrollingEnabled="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.VirtualizationMode="Standard"
+                  >
             <i:Interaction.Behaviors>
             </i:Interaction.Behaviors>
             <DataGrid.Columns>
@@ -31,8 +35,13 @@
                 <DataGridTextColumn Header="Time" Binding="{Binding Data.TimeStamp, StringFormat=\{0:HH:mm:ss.ffff\}, Mode=OneTime}" />
                 <DataGridTextColumn Header="PID" Binding="{Binding Data.ProcessID, Mode=OneTime}" />
                 <DataGridTextColumn Header="TID" Binding="{Binding ThreadId, Mode=OneTime}" />
-                <DataGridTextColumn Header="Opcode" Binding="{Binding Data.OpcodeName, Mode=OneTime}" />
                 <DataGridTextColumn Header="Process Name" Binding="{Binding Data.ProcessName, Mode=OneTime}" FontWeight="Bold" />
+                <DataGridTextColumn Header="Opcode" Binding="{Binding Data.OpcodeName, Mode=OneTime}" />
+                <DataGridTextColumn Header="More Info" Binding="{Binding MoreInfo}" Visibility="{Binding Data.IsGeneric, Source={StaticResource Proxy}, Converter={StaticResource bool2vis}}" />
+                <DataGridTextColumn Header="Parent PID" Visibility="{Binding Data.IsProcessesOnly, Source={StaticResource Proxy}, Converter={StaticResource bool2vis}}" Binding="{Binding Data.ParentID, Mode=OneTime}" />
+                <DataGridTextColumn Header="Session" Visibility="{Binding Data.IsProcessesOnly, Source={StaticResource Proxy}, Converter={StaticResource bool2vis}}" Binding="{Binding Data.SessionID, Mode=OneTime}" />
+                <DataGridTextColumn Header="File Name" Visibility="{Binding Data.IsModulesOnly, Source={StaticResource Proxy}, Converter={StaticResource bool2vis}}" Binding="{Binding Data.FileName, Mode=OneTime}" />
+                <DataGridTextColumn Header="Command Line" Visibility="{Binding Data.IsProcessesOnly, Source={StaticResource Proxy}, Converter={StaticResource bool2vis}}" Binding="{Binding Data.CommandLine, Mode=OneTime}" />
             </DataGrid.Columns>
         </DataGrid>
         <!--<ListView ItemsSource="{Binding Items, Mode=OneTime}" metro:ButtonHelper.PreserveTextCase="True" VirtualizingPanel.IsVirtualizing="True">
