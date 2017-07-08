@@ -5,12 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ProcMonX.Views"
              xmlns:z="http://zodiacon.wpf/2016" x:Name="This"
+             xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:conv="clr-namespace:ProcMonX.Converters"
              xmlns:ext="clr-namespace:ProcMonX.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <conv:ToolbarIconConverter x:Key="toolbarIconConverter" />
+        <conv:BooleanToImageConverter x:Key="bool2monitoringimage" TrueImage="/icons/hot/play.ico" FalseImage="/icons/hot/stop.ico" />
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -73,19 +75,21 @@
             <Button Command="{Binding GoCommand}" ToolTip="Start Monitoring" ext:IconProperties.Icon="play" />
             <Button Command="{Binding StopCommand}" ToolTip="Stop Monitoring" ext:IconProperties.Icon="stop" />
             <Separator />
+            <metro:ProgressRing Margin="20,0,0,0" IsActive="{Binding IsBusy}" Width="32" Height="32" />
         </ToolBar>
-        <TabControl ItemsSource="{Binding Tabs}" Grid.Row="2" SelectedItem="{Binding SelectedTab, Mode=TwoWay}" z:TabControlProperties.IsCached="True">
+        <TabControl ItemsSource="{Binding Tabs}" Grid.Row="2" SelectedItem="{Binding SelectedTab, Mode=TwoWay}" z:TabControlProperties.IsCached="True" 
+                    metro:TabControlHelper.UnderlineSelectedBrush="{DynamicResource AccentColorBrush2}" metro:TabControlHelper.IsUnderlined="True" >
             <TabControl.ItemContainerStyle>
-                <Style TargetType="TabItem" >
+                <Style TargetType="TabItem" BasedOn="{StaticResource MetroTabItem}">
                     <Setter Property="MinWidth" Value="100" />
-                    <Setter Property="BorderThickness" Value="1" />
-                    <Setter Property="Background" Value="{DynamicResource WhiteBrush}" />
+                    <Setter Property="BorderThickness" Value="1,0,1,0" />
+                    <Setter Property="Foreground" Value="{DynamicResource BlackBrush}" />
                     <Setter Property="HeaderTemplate">
                         <Setter.Value>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" >
                                     <Image Source="{Binding Icon}" Width="24" Height="24" x:Name="icon" />
-                                    <TextBlock Text="{Binding Header}" VerticalAlignment="Center" FontSize="12" Margin="4,0,0,0"/>
+                                    <TextBlock Text="{Binding Header}" VerticalAlignment="Center" FontSize="12" Margin="4,0,0,0" Foreground="Black"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Setter.Value>
@@ -100,7 +104,11 @@
             </TabControl.ItemContainerStyle>
         </TabControl>
         <StatusBar Grid.Row="3">
-            <TextBlock Text="{Binding Events.Count}" />
+            <TextBlock Text="{Binding Events.Count, StringFormat=Total Events: \{0\}}" MinWidth="120"/>
+            <Separator />
+            <Image Source="{Binding IsMonitoring, Converter={StaticResource bool2monitoringimage}}" Width="16" Height="16" />
+            <Separator />
+            <TextBlock Text="{Binding LostEvents, StringFormat=Events Lost: \{0\}}" />
         </StatusBar>
     </Grid>
 </UserControl>

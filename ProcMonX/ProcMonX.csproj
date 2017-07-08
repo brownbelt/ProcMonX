@@ -81,6 +81,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\BooleanToImageConverter.cs" />
     <Compile Include="Converters\ToolbarIconConverter.cs" />
     <Compile Include="Extensions\IconProperties.cs" />
     <Compile Include="Models\AppOptions.cs" />
@@ -224,6 +225,11 @@
   <ItemGroup>
     <Resource Include="Icons\Events\ImageLoad.ico" />
     <Resource Include="Icons\Tabs\Image.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Events\AlpcReceiveMessage.ico" />
+    <Resource Include="Icons\Events\AlpcSendMessage.ico" />
+    <Resource Include="Icons\Tabs\Alpc.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets" Condition="Exists('..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" />

@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Collections;
 using Microsoft.Diagnostics.Tracing;
+using System.Threading.Tasks;
 
 namespace ProcMonX.ViewModels {
 	class MainViewModel : BindableBase {
@@ -87,10 +88,16 @@ namespace ProcMonX.ViewModels {
 				Icon = "/icons/tabs/threads.ico",
 				IsThreadsOnly = true
 			});
+
 			AddTab(new EventsTabViewModel(_events, evt => evt.Data is RegistryTraceData) {
 				Header = "Registry",
 				Icon = "/icons/tabs/registry.ico",
 				IsRegistryOnly = true
+			});
+
+			AddTab(new EventsTabViewModel(_events, evt => evt.Type == EventType.AlpcReceiveMessage || evt.Type == EventType.AlpcSendMessage) {
+				Header = "ALPC",
+				Icon = "/icons/tabs/alpc.ico"
 			});
 		}
 
@@ -118,6 +125,7 @@ namespace ProcMonX.ViewModels {
 					_events.Add(_tempEvents[i]);
 				_tempEvents.Clear();
 			}
+			RaisePropertyChanged(nameof(LostEvents));
 		}
 
 		public ICommand AlwaysOnTopCommand => new DelegateCommand<DependencyObject>(element =>
@@ -152,11 +160,20 @@ namespace ProcMonX.ViewModels {
 
 		public DelegateCommandBase StopCommand => new DelegateCommand(
 			() => StopMonitoring(),
-			() => IsMonitoring)
-			.ObservesProperty(() => IsMonitoring);
+			() => IsMonitoring && !IsBusy)
+			.ObservesProperty(() => IsMonitoring). ObservesProperty(() => IsBusy);
 
-		private void StopMonitoring() {
-			_traceManager.Stop();
+		private bool _isBusy;
+
+		public bool IsBusy {
+			get => _isBusy;
+			set => SetProperty(ref _isBusy, value);
+		}
+
+		private async void StopMonitoring() {
+			IsBusy = true;
+			await Task.Run(() => _traceManager.Stop());
+			IsBusy = false;
 			IsMonitoring = false;
 		}
 
@@ -164,5 +181,7 @@ namespace ProcMonX.ViewModels {
 			_traceManager.Start(EventTypes, false);
 			IsMonitoring = true;
 		}
+
+		public int LostEvents => _traceManager.LostEvents;
 	}
 }

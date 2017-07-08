@@ -107,5 +107,8 @@ namespace ProcMonX.Tracing {
 				}
 			}
 		}
+
+		public int LostEvents => _session?.IsActive == true ? _session.EventsLost : 0;
+
 	}
 }
