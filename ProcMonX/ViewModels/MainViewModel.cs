@@ -95,24 +95,9 @@ namespace ProcMonX.ViewModels {
 		}
 
 		private void HookupEvents() {
-			_traceManager.ProcessTrace += (evt, type) => {
+			_traceManager.EventTrace += (evt, type) => {
 				lock(_tempEvents)
-					_tempEvents.Add(new TraceEventDataViewModel<ProcessTraceData>(evt, type, GetMoreInfo(evt)));
-			};
-
-			_traceManager.ThreadTrace += (evt, type) => {
-				lock (_tempEvents)
-					_tempEvents.Add(new TraceEventDataViewModel<ThreadTraceData>(evt, type));
-			};
-
-			_traceManager.RegistryTrace += (evt, type) => {
-				lock (_tempEvents)
-					_tempEvents.Add(new TraceEventDataViewModel<RegistryTraceData>(evt, type));
-			};
-
-			_traceManager.ImageLoadTrace += (evt, type) => {
-				lock (_tempEvents)
-					_tempEvents.Add(new TraceEventDataViewModel<ImageLoadTraceData>(evt, type));
+					_tempEvents.Add(new TraceEventDataViewModel(evt, type, GetMoreInfo(evt)));
 			};
 
 		}

@@ -81,7 +81,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Converters\DataGridExtensions.cs" />
     <Compile Include="Converters\ToolbarIconConverter.cs" />
     <Compile Include="Extensions\IconProperties.cs" />
     <Compile Include="Models\AppOptions.cs" />

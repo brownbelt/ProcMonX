@@ -34,12 +34,4 @@ namespace ProcMonX.ViewModels {
 			MoreInfo = moreInfo;
 		}
 	}
-
-	sealed class TraceEventDataViewModel<T> : TraceEventDataViewModel where T : TraceEvent {
-		public new T Data { get; }
-
-		public TraceEventDataViewModel(T evt, EventType type, string moreInfo = null) : base(evt, type, moreInfo) {
-			Data = evt;
-		}
-	}
 }
